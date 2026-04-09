@@ -1,0 +1,32 @@
+Projet Informatique ING3 POO Java : Javazic
+15 / 400 projets
+Le projet d’Informatique de ce deuxième semestre a pour objectif de concevoir et développer un programme de gestion d’un catalogue musical et de playlists, inspiré du fonctionnement des plateformes de streaming musical telles que Deezer ou Spotify.
+Le programme doit permettre entre autres :
+• La gestion d’un catalogue musical (morceaux, albums, artistes, groupes)
+• La gestion de comptes utilisateurs
+• La recherche et la sélection de morceaux ou d’albums
+• La création et la gestion de playlists
+...
+Le projet sera intégralement développé en Java avec les bibliothèques standards, sans utiliser de frameworks externes. Il devra respecter les principes de la programmation orientée objet et une architecture MVC (Modèle – Vue – Contrôleur). Une première version du programme devra fonctionner intégralement en mode console. Une seconde version proposera une interface graphique (Swing ou JavaFX) reposant sur le même modèle.
+
+Bien qu’il s’agisse d’un programme Java exécuté localement et non d’une application réellement déployée en environnement multi-utilisateurs, le système devra être conçu comme s’il pouvait être utilisé par plusieurs catégories d’acteurs distincts, disposant de droits et de responsabilités différents.
+À travers la mise en pratique des notions vues en cours de Programmation Orientée Objet, ce projet vise l’acquisition de plusieurs compétences :
+• Compétences en conception logicielle :
+- Identifier les acteurs et les cas d’utilisation (Use Cases)
+- Modéliser en utilisant le langage UML :
+- Concevoir une architecture MVC avec une séparation stricte entre la logique métier (Model), l’interface graphique (View)et la gestion des interactions utilisateur (Controller).
+
+• Compétences techniques :
+Maîtriser les concepts de la programmation orientée objet :
+
+• Compétences méthodologiques :
+- Travailler en équipe.
+- Planifier un projet et respecter les délais impartis.
+- Utiliser des outils collaboratifs.
+- Elaborer et mettre en œuvre un plan de tests.
+Organisation et planning :
+• Le projet se conduit en équipe de trois ou quatre étudiants d’un même groupe de TD.
+• Les étudiants doivent s’inscrire sur la plateforme projet la semaine du 16/03/2026.
+• Le projet démarre la semaine du 23/03/2026 (distribution du sujet) et se termine le 19/04/2026 (rendu final déposé par chaque équipe).
+• Un rapport final sera à rendre au plus tard le 19/04/2026.
+• Des soutenances auront lieu la semaine du 20/04/2026. 

@@ -1,0 +1,440 @@
+/* ===== JAVAZIC - Spotify-like Dark Theme ===== */
+
+/* --- Root --- */
+.root {
+    -fx-background-color: #121212;
+    -fx-font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* --- Scrollbar --- */
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #535353;
+    -fx-background-radius: 4;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #737373;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    -fx-background-color: #000000;
+    -fx-padding: 16 12 16 12;
+}
+.sidebar-logo {
+    -fx-text-fill: #1DB954;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+.sidebar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 12 8 12;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER_LEFT;
+    -fx-max-width: 1.7976931348623157E308;
+}
+.sidebar-btn:hover {
+    -fx-text-fill: #FFFFFF;
+}
+.sidebar-btn-active {
+    -fx-text-fill: #FFFFFF;
+}
+.sidebar-section {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 16 12 4 12;
+    -fx-text-transform: uppercase;
+}
+.sidebar-playlist-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 13px;
+    -fx-padding: 4 12 4 12;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER_LEFT;
+    -fx-max-width: 1.7976931348623157E308;
+}
+.sidebar-playlist-btn:hover {
+    -fx-text-fill: #FFFFFF;
+}
+.sidebar-separator {
+    -fx-background-color: #282828;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+/* --- Content area --- */
+.content-area {
+    -fx-background-color: #121212;
+    -fx-padding: 24;
+}
+.page-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+.section-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-padding: 16 0 8 0;
+}
+
+/* --- Player bar --- */
+.player-bar {
+    -fx-background-color: #181818;
+    -fx-border-color: #282828;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 8 16 8 16;
+    -fx-min-height: 72;
+    -fx-max-height: 72;
+}
+.player-track-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+.player-track-artist {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 11px;
+}
+.player-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 16px;
+    -fx-padding: 4 8 4 8;
+    -fx-cursor: hand;
+}
+.player-btn:hover {
+    -fx-text-fill: #FFFFFF;
+}
+.player-btn-play {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+    -fx-background-radius: 50;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-max-width: 32;
+    -fx-max-height: 32;
+    -fx-font-size: 14px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+.player-btn-play:hover {
+    -fx-background-color: #1ED760;
+    -fx-text-fill: #000000;
+}
+.player-time {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 11px;
+}
+.player-slider .track {
+    -fx-background-color: #535353;
+    -fx-pref-height: 4;
+    -fx-background-radius: 2;
+}
+.player-slider .thumb {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 50;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+}
+.player-slider:hover .track {
+    -fx-background-color: #1DB954;
+}
+.player-progress-track {
+    -fx-background-color: #535353;
+    -fx-background-radius: 999;
+}
+.player-progress-fill {
+    -fx-background-color: #1DB954;
+    -fx-background-radius: 999;
+}
+
+/* --- Track row --- */
+.track-row {
+    -fx-background-color: transparent;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 4;
+}
+.track-row:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+.track-row-playing {
+    -fx-background-color: rgba(29, 185, 84, 0.15);
+}
+.track-index {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 14px;
+    -fx-min-width: 32;
+    -fx-alignment: CENTER;
+}
+.track-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 14px;
+}
+.track-artist {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 12px;
+}
+.track-artist-link {
+    -fx-text-fill: #D8FFE7;
+    -fx-font-size: 12px;
+    -fx-underline: true;
+}
+.track-artist-link:hover {
+    -fx-text-fill: #1ED760;
+}
+.track-duration {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 13px;
+}
+.track-source-tag {
+    -fx-text-fill: #1DB954;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 1 4 1 4;
+    -fx-border-color: #1DB954;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+}
+.track-add-btn {
+    -fx-background-color: #1DB954;
+    -fx-text-fill: #000000;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;
+    -fx-min-width: 24;
+    -fx-min-height: 24;
+    -fx-max-width: 24;
+    -fx-max-height: 24;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+.track-add-btn:hover {
+    -fx-background-color: #1ED760;
+}
+
+/* --- Cards (album/artist) --- */
+.media-card {
+    -fx-background-color: #181818;
+    -fx-background-radius: 6;
+    -fx-padding: 16;
+    -fx-cursor: hand;
+}
+.media-card:hover {
+    -fx-background-color: #282828;
+}
+.card-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+.card-subtitle {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 12px;
+}
+.card-image {
+    -fx-background-color: #333333;
+    -fx-background-radius: 4;
+}
+
+/* --- Buttons --- */
+.btn-primary {
+    -fx-background-color: #1DB954;
+    -fx-text-fill: #000000;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 32 10 32;
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
+}
+.btn-primary:hover {
+    -fx-background-color: #1ED760;
+}
+.btn-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 24 8 24;
+    -fx-border-color: #727272;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
+}
+.btn-secondary:hover {
+    -fx-border-color: #FFFFFF;
+}
+
+/* --- Text fields --- */
+.text-field, .password-field {
+    -fx-background-color: #333333;
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: #727272;
+    -fx-padding: 10 14 10 14;
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-font-size: 14px;
+}
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #1DB954;
+    -fx-border-radius: 4;
+    -fx-border-width: 2;
+}
+.search-field {
+    -fx-background-color: #242424;
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: #727272;
+    -fx-padding: 10 14 10 40;
+    -fx-background-radius: 20;
+    -fx-border-color: transparent;
+    -fx-font-size: 14px;
+}
+.search-field:focused {
+    -fx-border-color: #FFFFFF;
+    -fx-border-radius: 20;
+    -fx-border-width: 2;
+}
+
+/* --- Labels --- */
+.text-primary {
+    -fx-text-fill: #FFFFFF;
+}
+.text-secondary {
+    -fx-text-fill: #B3B3B3;
+}
+.text-accent {
+    -fx-text-fill: #1DB954;
+}
+.text-error {
+    -fx-text-fill: #F15E6C;
+}
+
+/* --- Login page --- */
+.login-card {
+    -fx-background-color: #181818;
+    -fx-background-radius: 8;
+    -fx-padding: 40;
+    -fx-max-width: 400;
+}
+.login-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+.login-subtitle {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 14px;
+}
+.login-link {
+    -fx-text-fill: #1DB954;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-underline: true;
+}
+.login-link:hover {
+    -fx-text-fill: #1ED760;
+}
+.login-separator {
+    -fx-background-color: #333333;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+/* --- Tab-like provider buttons --- */
+.provider-tab {
+    -fx-background-color: #333333;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 6 16;
+    -fx-background-radius: 14;
+    -fx-cursor: hand;
+}
+.provider-tab:hover {
+    -fx-background-color: #444444;
+}
+.provider-tab-active {
+    -fx-background-color: #1DB954;
+    -fx-text-fill: #000000;
+}
+
+/* --- Album art placeholder --- */
+.album-art-placeholder {
+    -fx-background-color: #333333;
+    -fx-background-radius: 4;
+    -fx-alignment: center;
+}
+.album-art-placeholder-text {
+    -fx-text-fill: #535353;
+    -fx-font-size: 20px;
+}
+
+/* --- Column headers --- */
+.column-header {
+    -fx-text-fill: #B3B3B3;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 16 8 16;
+    -fx-border-color: transparent transparent #333333 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* --- Toast / notifications --- */
+.toast {
+    -fx-background-color: #1DB954;
+    -fx-background-radius: 4;
+    -fx-padding: 8 16 8 16;
+}
+.toast-text {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* --- Combo box --- */
+.combo-box {
+    -fx-background-color: #333333;
+    -fx-border-color: transparent;
+}
+.combo-box .list-cell {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #333333;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: #333333;
+}
+.combo-box-popup .list-cell {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #333333;
+}
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #444444;
+}

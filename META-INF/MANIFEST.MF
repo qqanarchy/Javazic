@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Main-Class: com.javazic.Main
+Implementation-Title: Javazic
+Implementation-Version: 1.0.0
+Implementation-Vendor: David
+

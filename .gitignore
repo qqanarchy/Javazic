@@ -1,0 +1,13 @@
+.idea/
+.playwright-cli/
+out/
+
+*.class
+*.iml
+*.log
+
+all_sources.txt
+javazic_data.ser
+
+.DS_Store
+Thumbs.db
