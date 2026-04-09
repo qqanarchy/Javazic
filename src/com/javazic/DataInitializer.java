@@ -12,15 +12,14 @@ import java.time.LocalDate;
  */
 public class DataInitializer {
 
-    public static void initialiser(CatalogueService catalogue,
-                                   UtilisateurService utilisateurs,
-                                   PlaylistService playlists) {
+    public static void initialiser(CatalogueService catalogue, UtilisateurService utilisateurs, PlaylistService playlists) {
 
         // === Utilisateurs ===
         Utilisateur admin = utilisateurs.inscrire("Admin", "admin@javazic.com", "admin", TypeUtilisateur.ADMIN);
         Utilisateur dave = utilisateurs.inscrire("Dave", "dave@gmail.com", "dave123", TypeUtilisateur.PREMIUM);
-        Utilisateur tibo = utilisateurs.inscrire("Tibo", "tibo@gmail.com", "tibo123", TypeUtilisateur.STANDARD);
-        Utilisateur eloi = utilisateurs.inscrire("Eloi", "eloi@gmail.com", "eloi123", TypeUtilisateur.STANDARD);
+            Utilisateur tibo = utilisateurs.inscrire("Tibo", "tibo@gmail.com", "tibo123", TypeUtilisateur.PREMIUM);
+        Utilisateur eloi = utilisateurs.inscrire("Eloi", "eloi@gmail.com", "eloi123", TypeUtilisateur.PREMIUM);
+        Utilisateur jade = utilisateurs.inscrire("Jade", "jade@gmail.com", "jade123", TypeUtilisateur.STANDARD);
 
         // === Artistes ===
         Artiste daftPunk = catalogue.creerArtiste("Daft Punk", "Duo electronique francais",
@@ -52,7 +51,7 @@ public class DataInitializer {
         Album nonante = catalogue.creerAlbum("Nonante-Cinq", LocalDate.of(2021, 12, 3),
                 Genre.POP, angele);
 
-        // === Morceaux ===
+        // ==> Morceaux de demo
         // Discovery
         catalogue.creerMorceau("One More Time", 320, daftPunk, discovery);
         catalogue.creerMorceau("Aerodynamic", 228, daftPunk, discovery);
