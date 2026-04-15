@@ -148,11 +148,14 @@ public class MainView extends BorderPane {
                 appleItunesService,
                 rechercheService,
                 resultContextService,
+                avisService,
                 this::lancerLectureListe,
                 this::naviguerArtiste,
                 this::naviguerAlbum,
                 this::ouvrirSelectionPlaylist,
-                peutAjouterAuxPlaylists());
+                utilisateurConnecte,
+                peutAjouterAuxPlaylists(),
+                peutNoterMorceaux());
         afficherPage(page);
         if (requeteInitiale != null && !requeteInitiale.isEmpty()) {
             page.lancerRecherche(requeteInitiale);
@@ -180,10 +183,12 @@ public class MainView extends BorderPane {
                 jamendoService,
                 appleItunesService,
                 rechercheService,
+                avisService,
                 resultContextService,
                 utilisateurConnecte,
                 this::lancerLectureListe,
-                this::rafraichirSidebar);
+                this::rafraichirSidebar,
+                this::naviguerPlaylists);
         afficherPage(page);
     }
 
@@ -205,7 +210,10 @@ public class MainView extends BorderPane {
                     this::lancerLectureListe,
                     this::naviguerAlbum,
                     this::ouvrirSelectionPlaylist,
-                    peutAjouterAuxPlaylists())));
+                    utilisateurConnecte,
+                    avisService,
+                    peutAjouterAuxPlaylists(),
+                    peutNoterMorceaux())));
         }, "javazic-artist-detail");
         worker.setDaemon(true);
         worker.start();
@@ -227,7 +235,10 @@ public class MainView extends BorderPane {
                     this::lancerLectureListe,
                     album.getArtiste() == null ? null : () -> naviguerArtiste(album.getArtiste()),
                     this::ouvrirSelectionPlaylist,
-                    peutAjouterAuxPlaylists())));
+                    utilisateurConnecte,
+                    avisService,
+                    peutAjouterAuxPlaylists(),
+                    peutNoterMorceaux())));
         }, "javazic-album-detail");
         worker.setDaemon(true);
         worker.start();
@@ -235,6 +246,10 @@ public class MainView extends BorderPane {
 
     public void naviguerProfil() {
         setActiveSidebarBtn(btnProfil);
+        if (modeVisiteur) {
+            afficherPage(new ProfilePage(ecoutesVisiteur, 5));
+            return;
+        }
         if (utilisateurConnecte == null) {
             return;
         }
@@ -333,6 +348,10 @@ public class MainView extends BorderPane {
     }
 
     private boolean peutAjouterAuxPlaylists() {
+        return utilisateurConnecte != null && !modeVisiteur;
+    }
+
+    private boolean peutNoterMorceaux() {
         return utilisateurConnecte != null && !modeVisiteur;
     }
 

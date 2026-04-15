@@ -3,6 +3,8 @@ package com.javazic.view.gui;
 import com.javazic.model.Album;
 import com.javazic.model.Artiste;
 import com.javazic.model.Morceau;
+import com.javazic.model.Utilisateur;
+import com.javazic.service.AvisService;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -28,7 +30,10 @@ public class ArtistDetailPage extends VBox {
                             HomePage.LectureHandler onPlay,
                             Consumer<Album> onAlbumClick,
                             Consumer<Morceau> onAddToPlaylist,
-                            boolean peutAjouter) {
+                            Utilisateur courant,
+                            AvisService avisService,
+                            boolean peutAjouter,
+                            boolean peutNoter) {
         setSpacing(0);
         setPadding(new Insets(0));
         setStyle("-fx-background-color: #121212;");
@@ -40,7 +45,14 @@ public class ArtistDetailPage extends VBox {
         if (albums != null && !albums.isEmpty()) {
             body.getChildren().add(creerSectionAlbums(albums, onAlbumClick));
         }
-        body.getChildren().add(creerSectionMorceaux(morceaux, onPlay, onAddToPlaylist, peutAjouter));
+        body.getChildren().add(creerSectionMorceaux(
+                morceaux,
+                onPlay,
+                onAddToPlaylist,
+                courant,
+                avisService,
+                peutAjouter,
+                peutNoter));
 
         getChildren().addAll(header, body);
     }
@@ -122,11 +134,14 @@ public class ArtistDetailPage extends VBox {
     private VBox creerSectionMorceaux(List<Morceau> morceaux,
                                       HomePage.LectureHandler onPlay,
                                       Consumer<Morceau> onAddToPlaylist,
-                                      boolean peutAjouter) {
+                                      Utilisateur courant,
+                                      AvisService avisService,
+                                      boolean peutAjouter,
+                                      boolean peutNoter) {
         VBox section = new VBox(4);
         Label titre = new Label("Morceaux");
         titre.getStyleClass().add("section-title");
-        section.getChildren().addAll(titre, TrackListComponents.creerHeader(peutAjouter));
+        section.getChildren().addAll(titre, TrackListComponents.creerHeader(peutAjouter, peutNoter));
 
         if (morceaux == null || morceaux.isEmpty()) {
             Label vide = new Label("Aucun morceau disponible.");
@@ -143,6 +158,9 @@ public class ArtistDetailPage extends VBox {
                     morceau,
                     i + 1,
                     peutAjouter,
+                    peutNoter,
+                    avisService,
+                    courant,
                     () -> onPlay.lancer(lecture, index),
                     null,
                     () -> {

@@ -99,6 +99,7 @@ public class PlaylistsPage extends VBox {
         card.getStyleClass().add("media-card");
         card.setPrefWidth(180);
         card.setCursor(javafx.scene.Cursor.HAND);
+        boolean estProprietaire = playlist.getProprietaire().getId() == utilisateur.getId();
 
         // Art placeholder
         StackPane art = new StackPane();
@@ -129,6 +130,28 @@ public class PlaylistsPage extends VBox {
         visibilite.setStyle("-fx-text-fill: " + (playlist.isEstPublique() ? "#1DB954" : "#B3B3B3") + ";");
 
         card.getChildren().addAll(art, nom, lblDesc, visibilite);
+
+        if (estProprietaire) {
+            Button btnSupprimer = new Button("Supprimer");
+            btnSupprimer.getStyleClass().add("btn-secondary");
+            btnSupprimer.setStyle("-fx-text-fill: #F15E6C; -fx-border-color: #F15E6C; -fx-padding: 6 12 6 12;");
+            btnSupprimer.setOnAction(e -> {
+                e.consume();
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Supprimer la playlist");
+                alert.setHeaderText(null);
+                alert.setContentText("Supprimer \"" + playlist.getNom() + "\" ?");
+                alert.showAndWait().ifPresent(result -> {
+                    if (result == ButtonType.OK
+                            && playlistService.supprimerPlaylist(playlist.getId(), utilisateur.getId())) {
+                        rafraichirPlaylists();
+                        onRefreshSidebar.run();
+                    }
+                });
+            });
+            card.getChildren().add(btnSupprimer);
+        }
+
         card.setOnMouseClicked(e -> onPlaylistClick.accept(playlist));
 
         return card;

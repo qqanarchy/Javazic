@@ -1,6 +1,9 @@
 package com.javazic.view.gui;
 
+import com.javazic.model.Avis;
 import com.javazic.model.Morceau;
+import com.javazic.model.Utilisateur;
+import com.javazic.service.AvisService;
 
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -17,7 +20,11 @@ public final class TrackListComponents {
 
     private TrackListComponents() {}
 
-    public static HBox creerHeader(boolean avecAction) {
+    public static HBox creerHeader(boolean avecAction, boolean avecNotation) {
+        return creerHeader(avecAction, avecNotation, false);
+    }
+
+    public static HBox creerHeader(boolean avecAction, boolean avecNotation, boolean avecSuppression) {
         HBox header = new HBox(12);
         header.getStyleClass().add("column-header");
         header.setAlignment(Pos.CENTER_LEFT);
@@ -48,17 +55,27 @@ public final class TrackListComponents {
 
         header.getChildren().addAll(num, titreCol, artisteCol, spacer, dureeCol);
 
+        if (avecNotation) {
+            header.getChildren().addAll(creerColAction(), creerColAction());
+        }
         if (avecAction) {
-            Region actionCol = new Region();
-            actionCol.setMinWidth(30);
-            actionCol.setPrefWidth(30);
-            header.getChildren().add(actionCol);
+            header.getChildren().add(creerColAction());
+        }
+        if (avecSuppression) {
+            header.getChildren().add(creerColAction());
         }
         return header;
     }
 
-    public static HBox creerLigne(Morceau morceau, int numero, boolean peutAjouter,
-                                  Runnable onPlay, Runnable onArtistClick, Runnable onAjouter) {
+    public static HBox creerLigne(Morceau morceau,
+                                  int numero,
+                                  boolean peutAjouter,
+                                  boolean peutNoter,
+                                  AvisService avisService,
+                                  Utilisateur courant,
+                                  Runnable onPlay,
+                                  Runnable onArtistClick,
+                                  Runnable onAjouter) {
         HBox row = new HBox(12);
         row.getStyleClass().add("track-row");
         row.setAlignment(Pos.CENTER_LEFT);
@@ -111,6 +128,32 @@ public final class TrackListComponents {
 
         row.getChildren().addAll(numLabel, titreBox, lblArtiste, spacer, lblDuree);
 
+        if (peutNoter && avisService != null && courant != null) {
+            Button btnLike = creerBoutonReaction("\uD83D\uDC4D");
+            Button btnDislike = creerBoutonReaction("\uD83D\uDC4E");
+
+            Avis avisCourant = avisService.getAvisUtilisateur(courant.getId(), morceau.getId());
+            appliquerEtatReaction(btnLike, btnDislike, avisCourant);
+
+            btnLike.setOnAction(e -> {
+                e.consume();
+                if (avisService.basculerAvis(courant, morceau, true, "", "")
+                        != AvisService.ResultatToggleAvis.ECHEC) {
+                    appliquerEtatReaction(btnLike, btnDislike, avisService.getAvisUtilisateur(courant.getId(), morceau.getId()));
+                }
+            });
+
+            btnDislike.setOnAction(e -> {
+                e.consume();
+                if (avisService.basculerAvis(courant, morceau, false, "", "")
+                        != AvisService.ResultatToggleAvis.ECHEC) {
+                    appliquerEtatReaction(btnLike, btnDislike, avisService.getAvisUtilisateur(courant.getId(), morceau.getId()));
+                }
+            });
+
+            row.getChildren().addAll(btnLike, btnDislike);
+        }
+
         if (peutAjouter && onAjouter != null) {
             Button btnAjouter = new Button("+");
             btnAjouter.getStyleClass().add("track-add-btn");
@@ -122,5 +165,32 @@ public final class TrackListComponents {
         }
 
         return row;
+    }
+
+    private static Region creerColAction() {
+        Region actionCol = new Region();
+        actionCol.setMinWidth(30);
+        actionCol.setPrefWidth(30);
+        return actionCol;
+    }
+
+    private static Button creerBoutonReaction(String label) {
+        Button btn = new Button(label);
+        btn.getStyleClass().add("track-rate-btn");
+        return btn;
+    }
+
+    private static void appliquerEtatReaction(Button btnLike, Button btnDislike, Avis avis) {
+        btnLike.getStyleClass().removeAll("track-rate-btn-like", "track-rate-btn-dislike");
+        btnDislike.getStyleClass().removeAll("track-rate-btn-like", "track-rate-btn-dislike");
+
+        if (avis == null) {
+            return;
+        }
+        if (avis.isPositif()) {
+            btnLike.getStyleClass().add("track-rate-btn-like");
+        } else {
+            btnDislike.getStyleClass().add("track-rate-btn-dislike");
+        }
     }
 }

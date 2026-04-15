@@ -407,6 +407,33 @@
     -fx-border-width: 0 0 1 0;
 }
 
+/* --- Track reactions --- */
+.track-rate-btn {
+    -fx-background-color: #252525;
+    -fx-text-fill: #B3B3B3;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: #3A3A3A;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 4 8 4 8;
+}
+.track-rate-btn:hover {
+    -fx-background-color: #313131;
+    -fx-text-fill: #FFFFFF;
+}
+.track-rate-btn-like {
+    -fx-background-color: rgba(29, 185, 84, 0.18);
+    -fx-border-color: #1DB954;
+    -fx-text-fill: #1ED760;
+}
+.track-rate-btn-dislike {
+    -fx-background-color: rgba(241, 94, 108, 0.18);
+    -fx-border-color: #F15E6C;
+    -fx-text-fill: #F47D88;
+}
+
 /* --- Toast / notifications --- */
 .toast {
     -fx-background-color: #1DB954;

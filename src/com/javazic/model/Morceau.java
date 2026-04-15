@@ -12,6 +12,7 @@ public class Morceau implements Serializable {
     private int id;
     private String titre;
     private int duree; // en secondes
+    private Genre genre = Genre.AUTRE;
     private String cheminFichier;
     private LocalDate dateAjout;
     private int nombreEcoute;
@@ -52,6 +53,7 @@ public class Morceau implements Serializable {
     public int getId() { return id; }
     public String getTitre() { return titre; }
     public int getDuree() { return duree; }
+    public Genre getGenre() { return genre == null ? Genre.AUTRE : genre; }
     public String getCheminFichier() { return cheminFichier; }
     public LocalDate getDateAjout() { return dateAjout; }
     public int getNombreEcoute() { return nombreEcoute; }
@@ -71,6 +73,7 @@ public class Morceau implements Serializable {
     // Setters
     public void setTitre(String titre) { this.titre = titre; }
     public void setDuree(int duree) { this.duree = duree; }
+    public void setGenre(Genre genre) { this.genre = genre == null ? Genre.AUTRE : genre; }
     public void setCheminFichier(String cheminFichier) { this.cheminFichier = cheminFichier; }
     public void setDateAjout(LocalDate dateAjout) { this.dateAjout = dateAjout; }
     public void setAlbum(Album album) { this.album = album; }

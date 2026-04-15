@@ -11,30 +11,28 @@ public class Avis implements Serializable {
     private int id;
     private Utilisateur auteur;
     private Morceau morceau;
-    private int note; // 1 a 5
+    private boolean positif;
     private String commentaire;
     private LocalDateTime dateAvis;
 
-    public Avis(int id, Utilisateur auteur, Morceau morceau, int note, String commentaire) {
+    public Avis(int id, Utilisateur auteur, Morceau morceau, boolean positif, String commentaire) {
         this.id = id;
         this.auteur = auteur;
         this.morceau = morceau;
-        this.note = Math.max(1, Math.min(5, note));
-        this.commentaire = commentaire;
+        this.positif = positif;
+        this.commentaire = commentaire == null ? "" : commentaire;
         this.dateAvis = LocalDateTime.now();
     }
 
-    // Getters
     public int getId() { return id; }
     public Utilisateur getAuteur() { return auteur; }
     public Morceau getMorceau() { return morceau; }
-    public int getNote() { return note; }
+    public boolean isPositif() { return positif; }
     public String getCommentaire() { return commentaire; }
     public LocalDateTime getDateAvis() { return dateAvis; }
 
-    // Setters
-    public void setNote(int note) { this.note = Math.max(1, Math.min(5, note)); }
-    public void setCommentaire(String commentaire) { this.commentaire = commentaire; }
+    public void setPositif(boolean positif) { this.positif = positif; }
+    public void setCommentaire(String commentaire) { this.commentaire = commentaire == null ? "" : commentaire; }
 
     @Override
     public boolean equals(Object o) {
@@ -51,7 +49,8 @@ public class Avis implements Serializable {
     @Override
     public String toString() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return auteur.getNom() + " - " + note + "/5 - " + dateAvis.format(fmt)
+        String sentiment = positif ? "Like" : "Dislike";
+        return auteur.getNom() + " - " + sentiment + " - " + dateAvis.format(fmt)
                 + (commentaire.isEmpty() ? "" : " : " + commentaire);
     }
 }

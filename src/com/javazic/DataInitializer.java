@@ -16,10 +16,10 @@ public class DataInitializer {
 
         // === Utilisateurs ===
         Utilisateur admin = utilisateurs.inscrire("Admin", "admin@javazic.com", "admin", TypeUtilisateur.ADMIN);
-        Utilisateur dave = utilisateurs.inscrire("Dave", "dave@gmail.com", "dave123", TypeUtilisateur.PREMIUM);
-            Utilisateur tibo = utilisateurs.inscrire("Tibo", "tibo@gmail.com", "tibo123", TypeUtilisateur.PREMIUM);
-        Utilisateur eloi = utilisateurs.inscrire("Eloi", "eloi@gmail.com", "eloi123", TypeUtilisateur.PREMIUM);
-        Utilisateur jade = utilisateurs.inscrire("Jade", "jade@gmail.com", "jade123", TypeUtilisateur.STANDARD);
+        Utilisateur dave = utilisateurs.inscrire("Dave", "dave@gmail.com", "dave123", TypeUtilisateur.ABONNE);
+        Utilisateur tibo = utilisateurs.inscrire("Tibo", "tibo@gmail.com", "tibo123", TypeUtilisateur.ABONNE);
+        Utilisateur eloi = utilisateurs.inscrire("Eloi", "eloi@gmail.com", "eloi123", TypeUtilisateur.ABONNE);
+        Utilisateur jade = utilisateurs.inscrire("Jade", "jade@gmail.com", "jade123", TypeUtilisateur.ABONNE);
 
         // === Artistes ===
         Artiste daftPunk = catalogue.creerArtiste("Daft Punk", "Duo electronique francais",
@@ -53,38 +53,38 @@ public class DataInitializer {
 
         // ==> Morceaux de demo
         // Discovery
-        catalogue.creerMorceau("One More Time", 320, daftPunk, discovery);
-        catalogue.creerMorceau("Aerodynamic", 228, daftPunk, discovery);
-        catalogue.creerMorceau("Digital Love", 301, daftPunk, discovery);
-        catalogue.creerMorceau("Harder, Better, Faster, Stronger", 224, daftPunk, discovery);
-        catalogue.creerMorceau("Something About Us", 232, daftPunk, discovery);
+        catalogue.creerMorceau("One More Time", 320, daftPunk, discovery, Genre.ELECTRO);
+        catalogue.creerMorceau("Aerodynamic", 228, daftPunk, discovery, Genre.ELECTRO);
+        catalogue.creerMorceau("Digital Love", 301, daftPunk, discovery, Genre.ELECTRO);
+        catalogue.creerMorceau("Harder, Better, Faster, Stronger", 224, daftPunk, discovery, Genre.ELECTRO);
+        catalogue.creerMorceau("Something About Us", 232, daftPunk, discovery, Genre.ELECTRO);
 
         // Racine carree
-        catalogue.creerMorceau("Papaoutai", 234, stromae, racineCarree);
-        catalogue.creerMorceau("Formidable", 234, stromae, racineCarree);
-        catalogue.creerMorceau("Tous les memes", 203, stromae, racineCarree);
-        catalogue.creerMorceau("Quand c'est ?", 210, stromae, racineCarree);
-        catalogue.creerMorceau("Ave Cesaria", 248, stromae, racineCarree);
+        catalogue.creerMorceau("Papaoutai", 234, stromae, racineCarree, Genre.HIPHOP);
+        catalogue.creerMorceau("Formidable", 234, stromae, racineCarree, Genre.HIPHOP);
+        catalogue.creerMorceau("Tous les memes", 203, stromae, racineCarree, Genre.HIPHOP);
+        catalogue.creerMorceau("Quand c'est ?", 210, stromae, racineCarree, Genre.HIPHOP);
+        catalogue.creerMorceau("Ave Cesaria", 248, stromae, racineCarree, Genre.HIPHOP);
 
         // Multitude
-        catalogue.creerMorceau("Sante", 188, stromae, multitude);
-        catalogue.creerMorceau("L'enfer", 222, stromae, multitude);
-        catalogue.creerMorceau("Mon amour", 161, stromae, multitude);
+        catalogue.creerMorceau("Sante", 188, stromae, multitude, Genre.POP);
+        catalogue.creerMorceau("L'enfer", 222, stromae, multitude, Genre.POP);
+        catalogue.creerMorceau("Mon amour", 161, stromae, multitude, Genre.POP);
 
         // Kind of Blue
-        catalogue.creerMorceau("So What", 562, miles, kindOfBlue);
-        catalogue.creerMorceau("Blue in Green", 327, miles, kindOfBlue);
-        catalogue.creerMorceau("All Blues", 690, miles, kindOfBlue);
+        catalogue.creerMorceau("So What", 562, miles, kindOfBlue, Genre.JAZZ);
+        catalogue.creerMorceau("Blue in Green", 327, miles, kindOfBlue, Genre.JAZZ);
+        catalogue.creerMorceau("All Blues", 690, miles, kindOfBlue, Genre.JAZZ);
 
         // Best of Edith Piaf
-        catalogue.creerMorceau("La Vie en rose", 197, edith, bpiaf);
-        catalogue.creerMorceau("Non, je ne regrette rien", 134, edith, bpiaf);
-        catalogue.creerMorceau("Hymne a l'amour", 193, edith, bpiaf);
+        catalogue.creerMorceau("La Vie en rose", 197, edith, bpiaf, Genre.CLASSIQUE);
+        catalogue.creerMorceau("Non, je ne regrette rien", 134, edith, bpiaf, Genre.CLASSIQUE);
+        catalogue.creerMorceau("Hymne a l'amour", 193, edith, bpiaf, Genre.CLASSIQUE);
 
         // Nonante-Cinq
-        catalogue.creerMorceau("Bruxelles je t'aime", 189, angele, nonante);
-        catalogue.creerMorceau("Libre", 180, angele, nonante);
-        catalogue.creerMorceau("Demon", 207, angele, nonante);
+        catalogue.creerMorceau("Bruxelles je t'aime", 189, angele, nonante, Genre.POP);
+        catalogue.creerMorceau("Libre", 180, angele, nonante, Genre.POP);
+        catalogue.creerMorceau("Demon", 207, angele, nonante, Genre.POP);
 
         // === Playlists ===
         if (dave != null) {

@@ -366,6 +366,7 @@ public class ConsoleView {
         afficherMessage("2. Top morceaux les plus ecoutes");
         afficherMessage("3. Top artistes les plus ecoutes");
         afficherMessage("4. Top albums les plus ecoutes");
+        afficherMessage("5. Top morceaux les plus likes");
         afficherSeparateur();
         afficherMessage("0. Retour");
         afficherSeparateur();
@@ -463,17 +464,18 @@ public class ConsoleView {
             afficherMessage("Aucun morceau trouve.");
             return;
         }
-        afficherMessage(String.format("%-4s %-8s %-12s %-28s %-20s %s",
-                "", "ID", "ID source", "Titre", "Artiste", "Duree"));
+        afficherMessage(String.format("%-4s %-8s %-12s %-28s %-20s %-12s %s",
+                "", "ID", "ID source", "Titre", "Artiste", "Genre", "Duree"));
         afficherSeparateur();
         for (Morceau m : morceaux) {
             String artiste = m.getArtistes().isEmpty() ? "?" : m.getArtistes().get(0).getNom();
-            afficherMessage(String.format("%-4s %-8d %-12s %-28s %-20s %s",
+            afficherMessage(String.format("%-4s %-8d %-12s %-28s %-20s %-12s %s",
                     m.getSource().getTag(),
                     m.getId(),
                     FormatUtil.tronquer(afficherSourceId(m.getSourceId()), 12),
                     FormatUtil.tronquer(m.getTitre(), 28),
                     FormatUtil.tronquer(artiste, 20),
+                    m.getGenre(),
                     m.getDureeFormatee()));
         }
     }
@@ -517,17 +519,18 @@ public class ConsoleView {
         if (morceaux.isEmpty()) {
             afficherMessage("  (playlist vide)");
         } else {
-            afficherMessage(String.format("  %-4s %-8s %-12s %-26s %-16s %s",
-                    "", "ID", "ID source", "Titre", "Artiste", "Duree"));
+            afficherMessage(String.format("  %-4s %-8s %-12s %-26s %-16s %-12s %s",
+                    "", "ID", "ID source", "Titre", "Artiste", "Genre", "Duree"));
             afficherSeparateur();
             for (Morceau m : morceaux) {
                 String artiste = m.getArtistes().isEmpty() ? "?" : m.getArtistes().get(0).getNom();
-                afficherMessage(String.format("  %-4s %-8d %-12s %-26s %-16s %s",
+                afficherMessage(String.format("  %-4s %-8d %-12s %-26s %-16s %-12s %s",
                         m.getSource().getTag(),
                         m.getId(),
                         FormatUtil.tronquer(afficherSourceId(m.getSourceId()), 12),
                         FormatUtil.tronquer(m.getTitre(), 26),
                         FormatUtil.tronquer(artiste, 16),
+                        m.getGenre(),
                         m.getDureeFormatee()));
             }
         }
@@ -597,16 +600,16 @@ public class ConsoleView {
 
     // ======================== AVIS ========================
 
-    public void afficherAvisMorceau(List<Avis> avisList, double noteMoyenne) {
+    public void afficherAvisMorceau(List<Avis> avisList, int likes, int dislikes) {
         if (avisList.isEmpty()) {
             afficherMessage("Aucun avis pour ce morceau.");
         } else {
-            afficherMessage("Note moyenne : " + String.format("%.1f", noteMoyenne) + "/5"
+            afficherMessage("Likes : " + likes + " | Dislikes : " + dislikes
                     + " (" + avisList.size() + " avis)");
             afficherSeparateur();
             for (Avis a : avisList) {
-                String etoiles = "*".repeat(a.getNote()) + " ".repeat(5 - a.getNote());
-                afficherMessage("  [" + etoiles + "] " + a.getAuteur().getNom()
+                String libelle = a.isPositif() ? "Like" : "Dislike";
+                afficherMessage("  [" + libelle + "] " + a.getAuteur().getNom()
                         + (a.getCommentaire().isEmpty() ? "" : " : " + a.getCommentaire()));
             }
         }
@@ -665,6 +668,21 @@ public class ConsoleView {
         }
     }
 
+    public void afficherTopMorceauxLikes(List<Map.Entry<Morceau, Integer>> morceaux) {
+        afficherTitre("Top Morceaux Likes");
+        if (morceaux.isEmpty()) {
+            afficherMessage("Aucune donnee.");
+            return;
+        }
+        int rang = 1;
+        for (Map.Entry<Morceau, Integer> entry : morceaux) {
+            Morceau morceau = entry.getKey();
+            String artiste = morceau.getArtistes().isEmpty() ? "?" : morceau.getArtistes().get(0).getNom();
+            afficherMessage(String.format("  %d. %-30s %-20s %d likes",
+                    rang++, morceau.getTitre(), artiste, entry.getValue()));
+        }
+    }
+
     // ======================== JAMENDO ========================
 
     public void afficherDebutLecture(Morceau morceau) {
@@ -692,13 +710,6 @@ public class ConsoleView {
             return genres[choix - 1];
         }
         return null;
-    }
-
-    public void afficherGenresDisponibles() {
-        Genre[] genres = Genre.values();
-        for (int i = 0; i < genres.length; i++) {
-            afficherMessage((i + 1) + ". " + genres[i].getLibelle());
-        }
     }
 
     private String afficherSourceId(String sourceId) {

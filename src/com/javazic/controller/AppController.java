@@ -13,8 +13,10 @@ import com.javazic.service.StatistiquesService;
 import com.javazic.service.UtilisateurService;
 import com.javazic.view.ConsoleView;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controleur principal de l'application.
@@ -119,7 +121,7 @@ public class AppController {
             return;
         }
 
-        Utilisateur u = utilisateurService.inscrire(nom, email, mdp, TypeUtilisateur.STANDARD);
+        Utilisateur u = utilisateurService.inscrire(nom, email, mdp, TypeUtilisateur.ABONNE);
         if (u != null) {
             vue.afficherSucces("Compte cree ! Vous pouvez maintenant vous connecter.");
         } else {
@@ -328,7 +330,7 @@ public class AppController {
     private void gererAvis() {
         vue.afficherTitre("Noter un morceau");
         int morceauId = vue.lireEntier("ID du morceau a noter");
-        Morceau morceau = catalogueService.getMorceau(morceauId);
+        Morceau morceau = trouverMorceau(morceauId);
         if (morceau == null) {
             vue.afficherErreur("Morceau introuvable.");
             return;
@@ -337,37 +339,63 @@ public class AppController {
         vue.afficherMessage("Morceau : " + morceau.getTitre());
 
         List<Avis> avisList = avisService.getAvisParMorceau(morceauId);
-        double moyenne = avisService.getNoteMoyenne(morceauId);
-        vue.afficherAvisMorceau(avisList, moyenne);
+        int likes = avisService.getNombreLikes(morceauId);
+        int dislikes = avisService.getNombreDislikes(morceauId);
+        vue.afficherAvisMorceau(avisList, likes, dislikes);
         vue.sautLigne();
 
         Avis existant = avisService.getAvisUtilisateur(utilisateurConnecte.getId(), morceauId);
         if (existant != null) {
-            vue.afficherMessage("Vous avez deja note ce morceau (" + existant.getNote() + "/5).");
-            if (vue.confirmer("Modifier votre avis ?")) {
-                int note = vue.lireEntier("Nouvelle note (1-5)");
-                String commentaire = vue.lireTexte("Nouveau commentaire (vide pour garder l'ancien)");
-                if (commentaire.isEmpty()) {
-                    commentaire = existant.getCommentaire();
+            vue.afficherMessage("Vous avez deja donne un avis : "
+                    + (existant.isPositif() ? "Like" : "Dislike") + ".");
+            vue.afficherMessage("1. Like");
+            vue.afficherMessage("2. Dislike");
+            vue.afficherMessage("3. Supprimer mon avis");
+            vue.afficherMessage("0. Annuler");
+            int choix = vue.lireChoix();
+
+            if (choix == 1 || choix == 2) {
+                boolean positif = choix == 1;
+                String commentaire = "";
+                if (existant.isPositif() != positif) {
+                    commentaire = vue.lireTexte("Commentaire (vide pour garder l'existant)");
                 }
-                if (avisService.modifierAvis(existant.getId(), utilisateurConnecte.getId(), note, commentaire)) {
-                    vue.afficherSucces("Avis modifie.");
+                AvisService.ResultatToggleAvis resultat =
+                        avisService.basculerAvis(utilisateurConnecte, morceau, positif, "", commentaire);
+                switch (resultat) {
+                    case SUPPRIME -> vue.afficherSucces("Avis retire.");
+                    case MODIFIE -> vue.afficherSucces("Avis modifie.");
+                    default -> vue.afficherErreur("Impossible de mettre a jour l'avis.");
                 }
-            } else if (vue.confirmer("Supprimer votre avis ?")) {
+            } else if (choix == 3) {
                 if (avisService.supprimerAvis(existant.getId(), utilisateurConnecte.getId())) {
                     vue.afficherSucces("Avis supprime.");
+                } else {
+                    vue.afficherErreur("Impossible de supprimer l'avis.");
                 }
             }
         } else {
-            int note = vue.lireEntier("Votre note (1-5)");
-            if (note < 1 || note > 5) {
-                vue.afficherErreur("Note invalide (entre 1-5).");
+            vue.afficherMessage("1. Like");
+            vue.afficherMessage("2. Dislike");
+            vue.afficherMessage("3. Annuler");
+            int choix = vue.lireChoix();
+            if (choix == 3 || choix == 0) {
                 return;
             }
+            if (choix != 1 && choix != 2) {
+                vue.afficherErreur("Choix invalide.");
+                return;
+            }
+            boolean positif = choix == 1;
             String commentaire = vue.lireTexte("Commentaire (optionnel)");
-            Avis avis = avisService.ajouterAvis(utilisateurConnecte, morceau, note, commentaire);
-            if (avis != null) {
+            AvisService.ResultatToggleAvis resultat =
+                    avisService.basculerAvis(utilisateurConnecte, morceau, positif, commentaire, commentaire);
+            if (resultat == AvisService.ResultatToggleAvis.AJOUTE) {
                 vue.afficherSucces("Avis enregistre !");
+            } else if (resultat == AvisService.ResultatToggleAvis.SUPPRIME) {
+                vue.afficherSucces("Avis retire.");
+            } else if (resultat == AvisService.ResultatToggleAvis.MODIFIE) {
+                vue.afficherSucces("Avis modifie.");
             } else {
                 vue.afficherErreur("Impossible d'enregistrer l'avis.");
             }
@@ -400,6 +428,16 @@ public class AppController {
                 }
                 case 4 -> {
                     vue.afficherTopAlbums(statistiquesService.getTopAlbums(10));
+                    vue.attendreTouche();
+                }
+                case 5 -> {
+                    List<Map.Entry<Morceau, Integer>> topLikes = new ArrayList<>();
+                    for (Morceau morceau : statistiquesService.getMorceauxLesPlusAimes(10)) {
+                        topLikes.add(new AbstractMap.SimpleEntry<>(
+                                morceau,
+                                avisService.getNombreLikes(morceau.getId())));
+                    }
+                    vue.afficherTopMorceauxLikes(topLikes);
                     vue.attendreTouche();
                 }
                 case 0 -> continuer = false;

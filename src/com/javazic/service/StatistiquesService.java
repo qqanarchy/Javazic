@@ -1,9 +1,10 @@
 package com.javazic.service;
 
 import com.javazic.dao.DataStore;
-import com.javazic.model.Morceau;
-import com.javazic.model.Artiste;
 import com.javazic.model.Album;
+import com.javazic.model.Artiste;
+import com.javazic.model.Avis;
+import com.javazic.model.Morceau;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,5 +59,21 @@ public class StatistiquesService {
                 .sorted(Map.Entry.<Album, Integer>comparingByValue().reversed())
                 .limit(limite)
                 .collect(Collectors.toList());
+    }
+
+    public List<Morceau> getMorceauxLesPlusAimes(int limite) {
+        return dataStore.getTousMorceaux().stream()
+                .sorted(Comparator
+                        .comparingInt((Morceau morceau) -> getNombreLikes(morceau.getId()))
+                        .reversed()
+                        .thenComparing(Morceau::getTitre))
+                .limit(limite)
+                .collect(Collectors.toList());
+    }
+
+    private int getNombreLikes(int morceauId) {
+        return (int) dataStore.getAvisParMorceau(morceauId).stream()
+                .filter(Avis::isPositif)
+                .count();
     }
 }

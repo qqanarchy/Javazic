@@ -471,7 +471,7 @@ public class CatalogueController {
     }
 
     private void ajouterMorceau() {
-        vue.afficherTitre("Ajouter un morceau");
+        vue.afficherTitre("Ajouter un morceau Demo");
         List<Album> albums = catalogueService.getTousAlbums();
         vue.afficherListeAlbums(albums);
         vue.sautLigne();
@@ -496,12 +496,13 @@ public class CatalogueController {
 
         String titre = vue.lireTexte("Titre du morceau");
         int duree = vue.lireEntier("Duree (en secondes)");
+        Genre genre = vue.choisirGenre();
 
-        if (titre.isEmpty() || duree <= 0) {
-            vue.afficherErreur("Titre et duree sont obligatoires.");
+        if (titre.isEmpty() || duree <= 0 || genre == null) {
+            vue.afficherErreur("Titre, duree et genre sont obligatoires.");
             return;
         }
-        Morceau morceau = catalogueService.creerMorceau(titre, duree, artiste, album);
+        Morceau morceau = catalogueService.creerMorceau(titre, duree, artiste, album, genre);
         vue.afficherSucces("Morceau cree : " + morceau);
     }
 

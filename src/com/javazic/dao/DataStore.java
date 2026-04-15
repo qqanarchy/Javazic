@@ -168,6 +168,7 @@ public class DataStore implements Serializable {
             return (DataStore) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("[ERREUR] Impossible de charger les donnees : " + e.getMessage());
+            System.err.println("[INFO] Sauvegarde conservee sur disque : " + fichier.getName());
             return null;
         }
     }

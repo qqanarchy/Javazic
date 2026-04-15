@@ -5,6 +5,7 @@ import com.javazic.model.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CatalogueService {
 
@@ -67,8 +68,13 @@ public class CatalogueService {
     // === Morceaux ===
 
     public Morceau creerMorceau(String titre, int duree, Artiste artistePrincipal, Album album) {
+        return creerMorceau(titre, duree, artistePrincipal, album, Genre.AUTRE);
+    }
+
+    public Morceau creerMorceau(String titre, int duree, Artiste artistePrincipal, Album album, Genre genre) {
         int id = dataStore.prochainIdMorceau();
         Morceau morceau = new Morceau(id, titre, duree, artistePrincipal);
+        morceau.setGenre(genre);
         if (album != null) {
             album.ajouterMorceau(morceau);
         }
@@ -78,6 +84,12 @@ public class CatalogueService {
 
     public List<Morceau> getTousMorceaux() {
         return dataStore.getTousMorceaux();
+    }
+
+    public List<Morceau> getMorceauxDemo() {
+        return dataStore.getTousMorceaux().stream()
+                .filter(m -> !m.estDistant())
+                .collect(Collectors.toList());
     }
 
     public Morceau getMorceau(int id) {

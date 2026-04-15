@@ -3,7 +3,9 @@ package com.javazic.view.gui;
 import com.javazic.model.Album;
 import com.javazic.model.Artiste;
 import com.javazic.model.Morceau;
+import com.javazic.model.Utilisateur;
 import com.javazic.service.AppleItunesService;
+import com.javazic.service.AvisService;
 import com.javazic.service.JamendoService;
 import com.javazic.service.ProviderSearchResults;
 import com.javazic.service.RechercheService;
@@ -29,7 +31,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Page de recherche multi-provider avec navigation artiste/album et ajout playlist.
+ * Page de recherche multi-provider avec filtres provider et type.
  */
 public class SearchPage extends VBox {
 
@@ -37,34 +39,45 @@ public class SearchPage extends VBox {
     private final AppleItunesService appleItunesService;
     private final RechercheService rechercheService;
     private final ResultContextService resultContextService;
+    private final AvisService avisService;
     private final HomePage.LectureHandler onPlay;
     private final Consumer<Artiste> onArtistClick;
     private final Consumer<Album> onAlbumClick;
     private final Consumer<Morceau> onAddToPlaylist;
+    private final Utilisateur courant;
     private final boolean peutAjouter;
+    private final boolean peutNoter;
 
     private final TextField searchField;
     private final VBox resultatsContainer;
+    private final VBox filtresContainer;
     private String providerActif = "Tout";
+    private String typeActif = "Tout";
 
     public SearchPage(JamendoService jamendoService,
                       AppleItunesService appleItunesService,
                       RechercheService rechercheService,
                       ResultContextService resultContextService,
+                      AvisService avisService,
                       HomePage.LectureHandler onPlay,
                       Consumer<Artiste> onArtistClick,
                       Consumer<Album> onAlbumClick,
                       Consumer<Morceau> onAddToPlaylist,
-                      boolean peutAjouter) {
+                      Utilisateur courant,
+                      boolean peutAjouter,
+                      boolean peutNoter) {
         this.jamendoService = jamendoService;
         this.appleItunesService = appleItunesService;
         this.rechercheService = rechercheService;
         this.resultContextService = resultContextService;
+        this.avisService = avisService;
         this.onPlay = onPlay;
         this.onArtistClick = onArtistClick;
         this.onAlbumClick = onAlbumClick;
         this.onAddToPlaylist = onAddToPlaylist;
+        this.courant = courant;
         this.peutAjouter = peutAjouter;
+        this.peutNoter = peutNoter;
 
         setSpacing(16);
         setPadding(new Insets(24));
@@ -79,11 +92,11 @@ public class SearchPage extends VBox {
         searchField.setMaxWidth(500);
         searchField.setOnAction(e -> lancerRecherche(searchField.getText()));
 
-        HBox tabs = creerTabsProvider();
-
+        filtresContainer = new VBox(8);
+        rafraichirFiltres();
         resultatsContainer = new VBox(12);
 
-        getChildren().addAll(titre, searchField, tabs, resultatsContainer);
+        getChildren().addAll(titre, searchField, filtresContainer, resultatsContainer);
     }
 
     public void lancerRecherche(String requete) {
@@ -139,7 +152,6 @@ public class SearchPage extends VBox {
             }
 
             resultContextService.memoriserMorceaux(tousMorceaux);
-
             Platform.runLater(() -> afficherResultats(motCle, tousArtistes, tousAlbums, tousMorceaux));
         }, "javazic-search");
         worker.setDaemon(true);
@@ -152,23 +164,29 @@ public class SearchPage extends VBox {
                                    List<Morceau> morceaux) {
         resultatsContainer.getChildren().clear();
 
-        if (artistes.isEmpty() && albums.isEmpty() && morceaux.isEmpty()) {
-            Label vide = new Label("Aucun resultat pour \"" + motCle + "\".");
-            vide.getStyleClass().add("text-secondary");
-            vide.setStyle("-fx-font-size: 16px; -fx-padding: 24 0 0 0;");
-            resultatsContainer.getChildren().add(vide);
+        boolean afficherArtistes = typeActif.equals("Tout") || typeActif.equals("Artistes");
+        boolean afficherAlbums = typeActif.equals("Tout") || typeActif.equals("Albums");
+        boolean afficherMorceaux = typeActif.equals("Tout") || typeActif.equals("Morceaux");
+
+        boolean vide = (!afficherArtistes || artistes.isEmpty())
+                && (!afficherAlbums || albums.isEmpty())
+                && (!afficherMorceaux || morceaux.isEmpty());
+
+        if (vide) {
+            Label videLabel = new Label("Aucun resultat pour \"" + motCle + "\".");
+            videLabel.getStyleClass().add("text-secondary");
+            videLabel.setStyle("-fx-font-size: 16px; -fx-padding: 24 0 0 0;");
+            resultatsContainer.getChildren().add(videLabel);
             return;
         }
 
-        if (!artistes.isEmpty()) {
+        if (afficherArtistes && !artistes.isEmpty()) {
             resultatsContainer.getChildren().add(creerSectionArtistes(artistes));
         }
-
-        if (!albums.isEmpty()) {
+        if (afficherAlbums && !albums.isEmpty()) {
             resultatsContainer.getChildren().add(creerSectionAlbums(albums));
         }
-
-        if (!morceaux.isEmpty()) {
+        if (afficherMorceaux && !morceaux.isEmpty()) {
             resultatsContainer.getChildren().add(creerSectionMorceaux(morceaux));
         }
     }
@@ -179,22 +197,51 @@ public class SearchPage extends VBox {
 
         String[] providers = {"Tout", "Demo", "Jamendo", "Apple"};
         for (String provider : providers) {
-            Button btn = new Button(provider);
-            btn.getStyleClass().add("provider-tab");
-            if (provider.equals(providerActif)) {
-                btn.getStyleClass().add("provider-tab-active");
-            }
+            Button btn = creerOnglet(provider.equals(providerActif), provider);
             btn.setOnAction(e -> {
                 providerActif = provider;
-                tabs.getChildren().forEach(node -> node.getStyleClass().remove("provider-tab-active"));
-                btn.getStyleClass().add("provider-tab-active");
-                if (!searchField.getText().isEmpty()) {
-                    lancerRecherche(searchField.getText());
-                }
+                rafraichirFiltres();
+                actualiserRecherche();
             });
             tabs.getChildren().add(btn);
         }
         return tabs;
+    }
+
+    private HBox creerTabsType() {
+        HBox tabs = new HBox(8);
+        tabs.setAlignment(Pos.CENTER_LEFT);
+
+        String[] types = {"Tout", "Artistes", "Albums", "Morceaux"};
+        for (String type : types) {
+            Button btn = creerOnglet(type.equals(typeActif), type);
+            btn.setOnAction(e -> {
+                typeActif = type;
+                rafraichirFiltres();
+                actualiserRecherche();
+            });
+            tabs.getChildren().add(btn);
+        }
+        return tabs;
+    }
+
+    private Button creerOnglet(boolean actif, String texte) {
+        Button btn = new Button(texte);
+        btn.getStyleClass().add("provider-tab");
+        if (actif) {
+            btn.getStyleClass().add("provider-tab-active");
+        }
+        return btn;
+    }
+
+    private void actualiserRecherche() {
+        if (!searchField.getText().isEmpty()) {
+            lancerRecherche(searchField.getText());
+        }
+    }
+
+    private void rafraichirFiltres() {
+        filtresContainer.getChildren().setAll(creerTabsProvider(), creerTabsType());
     }
 
     private VBox creerSectionArtistes(List<Artiste> artistes) {
@@ -235,7 +282,7 @@ public class SearchPage extends VBox {
         VBox section = new VBox(4);
         Label titre = new Label("Morceaux (" + morceaux.size() + ")");
         titre.getStyleClass().add("section-title");
-        section.getChildren().addAll(titre, TrackListComponents.creerHeader(peutAjouter));
+        section.getChildren().addAll(titre, TrackListComponents.creerHeader(peutAjouter, peutNoter));
 
         for (int i = 0; i < morceaux.size(); i++) {
             Morceau morceau = morceaux.get(i);
@@ -245,6 +292,9 @@ public class SearchPage extends VBox {
                     morceau,
                     i + 1,
                     peutAjouter,
+                    peutNoter,
+                    avisService,
+                    courant,
                     () -> onPlay.lancer(morceaux, index),
                     artistePrincipal == null ? null : () -> onArtistClick.accept(artistePrincipal),
                     () -> {

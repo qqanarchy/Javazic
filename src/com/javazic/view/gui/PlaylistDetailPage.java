@@ -3,20 +3,35 @@ package com.javazic.view.gui;
 import com.javazic.model.Morceau;
 import com.javazic.model.Playlist;
 import com.javazic.model.Utilisateur;
-import com.javazic.service.*;
+import com.javazic.service.AppleItunesService;
+import com.javazic.service.AvisService;
+import com.javazic.service.JamendoService;
+import com.javazic.service.PlaylistService;
+import com.javazic.service.RechercheService;
+import com.javazic.service.ResultContextService;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Page detail d'une playlist avec gestion des morceaux.
@@ -28,10 +43,12 @@ public class PlaylistDetailPage extends VBox {
     private final JamendoService jamendoService;
     private final AppleItunesService appleItunesService;
     private final RechercheService rechercheService;
+    private final AvisService avisService;
     private final ResultContextService resultContextService;
     private final Utilisateur utilisateur;
     private final HomePage.LectureHandler onPlay;
     private final Runnable onRefreshSidebar;
+    private final Runnable onDeleted;
 
     private final VBox trackListContainer;
 
@@ -40,36 +57,35 @@ public class PlaylistDetailPage extends VBox {
                               JamendoService jamendoService,
                               AppleItunesService appleItunesService,
                               RechercheService rechercheService,
+                              AvisService avisService,
                               ResultContextService resultContextService,
                               Utilisateur utilisateur,
                               HomePage.LectureHandler onPlay,
-                              Runnable onRefreshSidebar) {
+                              Runnable onRefreshSidebar,
+                              Runnable onDeleted) {
         this.playlist = playlist;
         this.playlistService = playlistService;
         this.jamendoService = jamendoService;
         this.appleItunesService = appleItunesService;
         this.rechercheService = rechercheService;
+        this.avisService = avisService;
         this.resultContextService = resultContextService;
         this.utilisateur = utilisateur;
         this.onPlay = onPlay;
         this.onRefreshSidebar = onRefreshSidebar;
+        this.onDeleted = onDeleted;
 
         setSpacing(0);
         setPadding(new Insets(0));
         setStyle("-fx-background-color: #121212;");
 
-        // Header gradient
         VBox header = creerHeader();
         trackListContainer = new VBox(0);
         VBox body = new VBox(16);
         body.setPadding(new Insets(24));
-
-        // Actions bar
-        HBox actions = creerBarreActions();
-        body.getChildren().addAll(actions, trackListContainer);
+        body.getChildren().addAll(creerBarreActions(), trackListContainer);
 
         rafraichirListeMorceaux();
-
         getChildren().addAll(header, body);
     }
 
@@ -81,7 +97,6 @@ public class PlaylistDetailPage extends VBox {
         HBox headerContent = new HBox(20);
         headerContent.setAlignment(Pos.BOTTOM_LEFT);
 
-        // Playlist art
         StackPane art = new StackPane();
         art.setPrefSize(180, 180);
         art.setMinSize(180, 180);
@@ -97,7 +112,6 @@ public class PlaylistDetailPage extends VBox {
 
         art.getChildren().addAll(bg, icon);
 
-        // Info
         VBox info = new VBox(4);
         info.setAlignment(Pos.BOTTOM_LEFT);
 
@@ -121,7 +135,9 @@ public class PlaylistDetailPage extends VBox {
         lblStats.getStyleClass().add("text-secondary");
 
         info.getChildren().addAll(typeLabel, nom);
-        if (!desc.isEmpty()) info.getChildren().add(lblDesc);
+        if (!desc.isEmpty()) {
+            info.getChildren().add(lblDesc);
+        }
         info.getChildren().add(lblStats);
 
         headerContent.getChildren().addAll(art, info);
@@ -133,7 +149,6 @@ public class PlaylistDetailPage extends VBox {
         HBox actions = new HBox(12);
         actions.setAlignment(Pos.CENTER_LEFT);
 
-        // Play all button
         Button btnPlay = new Button("\u25B6  Lecture");
         btnPlay.getStyleClass().add("btn-primary");
         btnPlay.setStyle("-fx-font-size: 16px; -fx-padding: 12 36 12 36;");
@@ -144,12 +159,10 @@ public class PlaylistDetailPage extends VBox {
             }
         });
 
-        // Add track button
         Button btnAjouter = new Button("+ Ajouter");
         btnAjouter.getStyleClass().add("btn-secondary");
         btnAjouter.setOnAction(e -> dialogAjouterMorceau());
 
-        // Options
         boolean estProprietaire = utilisateur != null
                 && playlist.getProprietaire().getId() == utilisateur.getId();
 
@@ -169,7 +182,12 @@ public class PlaylistDetailPage extends VBox {
             btnRenommer.getStyleClass().add("btn-secondary");
             btnRenommer.setOnAction(e -> dialogRenommer());
 
-            actions.getChildren().addAll(btnVisibilite, btnRenommer);
+            Button btnSupprimer = new Button("Supprimer la playlist");
+            btnSupprimer.getStyleClass().add("btn-secondary");
+            btnSupprimer.setStyle("-fx-text-fill: #F15E6C; -fx-border-color: #F15E6C;");
+            btnSupprimer.setOnAction(e -> supprimerPlaylist());
+
+            actions.getChildren().addAll(btnVisibilite, btnRenommer, btnSupprimer);
         }
 
         return actions;
@@ -187,95 +205,58 @@ public class PlaylistDetailPage extends VBox {
             return;
         }
 
-        // Column header
-        HBox header = creerHeaderColonnes();
-        trackListContainer.getChildren().add(header);
+        boolean estProprietaire = utilisateur != null
+                && playlist.getProprietaire().getId() == utilisateur.getId();
+
+        trackListContainer.getChildren().add(TrackListComponents.creerHeader(false, utilisateur != null, estProprietaire));
 
         for (int i = 0; i < morceaux.size(); i++) {
-            Morceau m = morceaux.get(i);
+            Morceau morceau = morceaux.get(i);
             int index = i;
-            HBox row = creerLigneMorceau(m, i + 1);
-            row.setOnMouseClicked(e -> onPlay.lancer(new ArrayList<>(morceaux), index));
+            HBox row = TrackListComponents.creerLigne(
+                    morceau,
+                    i + 1,
+                    false,
+                    utilisateur != null,
+                    avisService,
+                    utilisateur,
+                    () -> onPlay.lancer(new ArrayList<>(morceaux), index),
+                    null,
+                    null);
+
+            if (estProprietaire) {
+                Button btnRetirer = new Button("\u2715");
+                btnRetirer.getStyleClass().add("player-btn");
+                btnRetirer.setStyle("-fx-text-fill: #F15E6C; -fx-font-size: 12px;");
+                btnRetirer.setMinWidth(40);
+                btnRetirer.setOnAction(e -> {
+                    e.consume();
+                    playlistService.retirerMorceauDePlaylist(playlist.getId(), morceau.getId());
+                    rafraichirListeMorceaux();
+                    onRefreshSidebar.run();
+                });
+                row.getChildren().add(btnRetirer);
+            }
+
             trackListContainer.getChildren().add(row);
         }
     }
 
-    private HBox creerHeaderColonnes() {
-        HBox header = new HBox(8);
-        header.getStyleClass().add("column-header");
-
-        Label num = new Label("#");
-        num.setMinWidth(32);
-        num.getStyleClass().add("text-secondary");
-
-        Label titreCol = new Label("TITRE");
-        titreCol.getStyleClass().add("text-secondary");
-        HBox.setHgrow(titreCol, Priority.ALWAYS);
-
-        Label artisteCol = new Label("ARTISTE");
-        artisteCol.getStyleClass().add("text-secondary");
-        artisteCol.setMinWidth(150);
-
-        Label dureeCol = new Label("DUREE");
-        dureeCol.getStyleClass().add("text-secondary");
-        dureeCol.setMinWidth(60);
-
-        Label actionCol = new Label("");
-        actionCol.setMinWidth(40);
-
-        header.getChildren().addAll(num, titreCol, artisteCol, dureeCol, actionCol);
-        return header;
-    }
-
-    private HBox creerLigneMorceau(Morceau morceau, int numero) {
-        HBox row = new HBox(8);
-        row.getStyleClass().add("track-row");
-        row.setAlignment(Pos.CENTER_LEFT);
-        row.setCursor(javafx.scene.Cursor.HAND);
-
-        Label numLabel = new Label(String.valueOf(numero));
-        numLabel.getStyleClass().add("track-index");
-
-        HBox titreBox = new HBox(6);
-        titreBox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(titreBox, Priority.ALWAYS);
-
-        if (morceau.getSource().estDistant()) {
-            Label tag = new Label(morceau.getSource().getTag());
-            tag.getStyleClass().add("track-source-tag");
-            titreBox.getChildren().add(tag);
-        }
-
-        Label lblTitre = new Label(morceau.getTitre());
-        lblTitre.getStyleClass().add("track-title");
-        titreBox.getChildren().add(lblTitre);
-
-        String artiste = morceau.getArtistes().isEmpty() ? "Inconnu" : morceau.getArtistes().get(0).getNom();
-        Label lblArtiste = new Label(artiste);
-        lblArtiste.getStyleClass().add("track-artist");
-        lblArtiste.setMinWidth(150);
-
-        Label lblDuree = new Label(morceau.getDureeFormatee());
-        lblDuree.getStyleClass().add("track-duration");
-        lblDuree.setMinWidth(60);
-
-        // Remove button
-        boolean estProprietaire = utilisateur != null
-                && playlist.getProprietaire().getId() == utilisateur.getId();
-        Button btnRetirer = new Button("\u2715");
-        btnRetirer.getStyleClass().add("player-btn");
-        btnRetirer.setStyle("-fx-text-fill: #F15E6C; -fx-font-size: 12px;");
-        btnRetirer.setMinWidth(40);
-        btnRetirer.setVisible(estProprietaire);
-        btnRetirer.setOnAction(e -> {
-            e.consume();
-            playlistService.retirerMorceauDePlaylist(playlist.getId(), morceau.getId());
-            rafraichirListeMorceaux();
-            onRefreshSidebar.run();
+    private void supprimerPlaylist() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Supprimer la playlist");
+        alert.setHeaderText(null);
+        alert.setContentText("Supprimer \"" + playlist.getNom() + "\" ?");
+        alert.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK
+                    && utilisateur != null
+                    && playlistService.supprimerPlaylist(playlist.getId(), utilisateur.getId())) {
+                onRefreshSidebar.run();
+                if (onDeleted != null) {
+                    onDeleted.run();
+                }
+            }
         });
-
-        row.getChildren().addAll(numLabel, titreBox, lblArtiste, lblDuree, btnRetirer);
-        return row;
     }
 
     private void dialogAjouterMorceau() {
@@ -299,32 +280,39 @@ public class PlaylistDetailPage extends VBox {
         info.getStyleClass().add("text-secondary");
         resultats.getChildren().add(info);
 
-        // Derniers resultats
         List<Morceau> derniers = resultContextService.getDerniersMorceaux();
         if (!derniers.isEmpty()) {
             Label lblDerniers = new Label("Derniers resultats (" + derniers.size() + ")");
             lblDerniers.getStyleClass().add("text-secondary");
             lblDerniers.setStyle("-fx-font-weight: bold;");
             resultats.getChildren().add(lblDerniers);
-            for (Morceau m : derniers) {
-                resultats.getChildren().add(creerLigneAjout(m, resultats));
+            for (Morceau morceau : derniers) {
+                resultats.getChildren().add(creerLigneAjout(morceau));
             }
         }
 
         searchField.setOnAction(e -> {
             String motCle = searchField.getText().trim();
-            if (motCle.isEmpty()) return;
+            if (motCle.isEmpty()) {
+                return;
+            }
 
             resultats.getChildren().clear();
             Label loading = new Label("Recherche...");
             loading.getStyleClass().add("text-secondary");
             resultats.getChildren().add(loading);
 
-            new Thread(() -> {
+            Thread worker = new Thread(() -> {
                 List<Morceau> morceaux = new ArrayList<>();
                 morceaux.addAll(rechercheService.rechercherMorceaux(motCle));
-                try { morceaux.addAll(jamendoService.rechercherMorceaux(motCle)); } catch (Exception ignored) {}
-                try { morceaux.addAll(appleItunesService.rechercherMorceaux(motCle)); } catch (Exception ignored) {}
+                try {
+                    morceaux.addAll(jamendoService.rechercherMorceaux(motCle));
+                } catch (Exception ignored) {
+                }
+                try {
+                    morceaux.addAll(appleItunesService.rechercherMorceaux(motCle));
+                } catch (Exception ignored) {
+                }
 
                 int limit = Math.min(morceaux.size(), 15);
                 List<Morceau> limited = morceaux.subList(0, limit);
@@ -336,12 +324,14 @@ public class PlaylistDetailPage extends VBox {
                         vide.getStyleClass().add("text-secondary");
                         resultats.getChildren().add(vide);
                     } else {
-                        for (Morceau m : limited) {
-                            resultats.getChildren().add(creerLigneAjout(m, resultats));
+                        for (Morceau morceau : limited) {
+                            resultats.getChildren().add(creerLigneAjout(morceau));
                         }
                     }
                 });
-            }).start();
+            }, "javazic-playlist-search");
+            worker.setDaemon(true);
+            worker.start();
         });
 
         ScrollPane scroll = new ScrollPane(resultats);
@@ -351,11 +341,10 @@ public class PlaylistDetailPage extends VBox {
 
         content.getChildren().addAll(searchField, scroll);
         pane.setContent(content);
-
         dialog.showAndWait();
     }
 
-    private HBox creerLigneAjout(Morceau morceau, VBox parent) {
+    private HBox creerLigneAjout(Morceau morceau) {
         HBox row = new HBox(8);
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(4, 8, 4, 8));
@@ -411,7 +400,6 @@ public class PlaylistDetailPage extends VBox {
             if (!nom.trim().isEmpty()) {
                 playlistService.renommerPlaylist(playlist.getId(), nom.trim());
                 onRefreshSidebar.run();
-                // Refresh header
                 getChildren().clear();
                 VBox header = creerHeader();
                 VBox body = new VBox(16);

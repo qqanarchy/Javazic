@@ -9,28 +9,60 @@ import java.util.List;
 
 public class AvisService {
 
+    public enum ResultatToggleAvis {
+        AJOUTE,
+        MODIFIE,
+        SUPPRIME,
+        ECHEC
+    }
+
     private final DataStore dataStore;
 
     public AvisService(DataStore dataStore) {
         this.dataStore = dataStore;
     }
 
-    public Avis ajouterAvis(Utilisateur auteur, Morceau morceau, int note, String commentaire) {
-        // Verifier si l'utilisateur a deja laisse un avis sur ce morceau
+    public Avis ajouterAvis(Utilisateur auteur, Morceau morceau, boolean positif, String commentaire) {
         Avis existant = dataStore.getAvisParUtilisateurEtMorceau(auteur.getId(), morceau.getId());
         if (existant != null) {
-            return null; // deja note
+            return null;
         }
         int id = dataStore.prochainIdAvis();
-        Avis avis = new Avis(id, auteur, morceau, note, commentaire);
+        Avis avis = new Avis(id, auteur, morceau, positif, commentaire);
         dataStore.ajouterAvis(avis);
         return avis;
     }
 
-    public boolean modifierAvis(int avisId, int utilisateurId, int nouvelleNote, String nouveauCommentaire) {
+    public ResultatToggleAvis basculerAvis(Utilisateur auteur,
+                                           Morceau morceau,
+                                           boolean positif,
+                                           String commentaireCreation,
+                                           String commentaireModification) {
+        Avis existant = dataStore.getAvisParUtilisateurEtMorceau(auteur.getId(), morceau.getId());
+        if (existant == null) {
+            Avis avis = ajouterAvis(auteur, morceau, positif, commentaireCreation);
+            return avis != null ? ResultatToggleAvis.AJOUTE : ResultatToggleAvis.ECHEC;
+        }
+
+        if (existant.isPositif() == positif) {
+            return supprimerAvis(existant.getId(), auteur.getId())
+                    ? ResultatToggleAvis.SUPPRIME
+                    : ResultatToggleAvis.ECHEC;
+        }
+
+        String commentaire = commentaireModification;
+        if (commentaire == null || commentaire.isBlank()) {
+            commentaire = existant.getCommentaire();
+        }
+        return modifierAvis(existant.getId(), auteur.getId(), positif, commentaire)
+                ? ResultatToggleAvis.MODIFIE
+                : ResultatToggleAvis.ECHEC;
+    }
+
+    public boolean modifierAvis(int avisId, int utilisateurId, boolean positif, String nouveauCommentaire) {
         Avis avis = dataStore.getAvis(avisId);
         if (avis == null || avis.getAuteur().getId() != utilisateurId) return false;
-        avis.setNote(nouvelleNote);
+        avis.setPositif(positif);
         avis.setCommentaire(nouveauCommentaire);
         return true;
     }
@@ -46,10 +78,26 @@ public class AvisService {
         return dataStore.getAvisParMorceau(morceauId);
     }
 
-    public double getNoteMoyenne(int morceauId) {
-        List<Avis> liste = dataStore.getAvisParMorceau(morceauId);
-        if (liste.isEmpty()) return 0;
-        return liste.stream().mapToInt(Avis::getNote).average().orElse(0);
+    public int getNombreLikes(int morceauId) {
+        return (int) dataStore.getAvisParMorceau(morceauId).stream()
+                .filter(Avis::isPositif)
+                .count();
+    }
+
+    public int getNombreDislikes(int morceauId) {
+        return (int) dataStore.getAvisParMorceau(morceauId).stream()
+                .filter(avis -> !avis.isPositif())
+                .count();
+    }
+
+    public double getRatioLikes(int morceauId) {
+        int likes = getNombreLikes(morceauId);
+        int dislikes = getNombreDislikes(morceauId);
+        int total = likes + dislikes;
+        if (total == 0) {
+            return 0;
+        }
+        return (double) likes / total;
     }
 
     public Avis getAvisUtilisateur(int utilisateurId, int morceauId) {

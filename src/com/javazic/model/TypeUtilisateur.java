@@ -1,8 +1,7 @@
 package com.javazic.model;
 
 public enum TypeUtilisateur {
-    STANDARD("Standard"),
-    PREMIUM("Premium"),
+    ABONNE("Abonne"),
     ADMIN("Administrateur");
 
     private final String libelle;

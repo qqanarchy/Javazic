@@ -145,7 +145,7 @@ public class LoginPage extends StackPane {
                 return;
             }
 
-            Utilisateur u = utilisateurService.inscrire(nom, email, mdp, TypeUtilisateur.STANDARD);
+            Utilisateur u = utilisateurService.inscrire(nom, email, mdp, TypeUtilisateur.ABONNE);
             if (u != null) {
                 afficherFormulaireConnexion();
                 lblErreur.setTextFill(Color.web("#1DB954"));

@@ -1,21 +1,41 @@
 package com.javazic.view.gui;
 
-import com.javazic.model.*;
-import com.javazic.service.*;
+import com.javazic.model.HistoriqueEcoute;
+import com.javazic.model.Genre;
+import com.javazic.model.Artiste;
+import com.javazic.model.Morceau;
+import com.javazic.model.Utilisateur;
+import com.javazic.service.AvisService;
+import com.javazic.service.CatalogueService;
+import com.javazic.service.StatistiquesService;
+import com.javazic.service.UtilisateurService;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- * Page profil utilisateur + panneau admin (stats, gestion utilisateurs, catalogue).
+ * Page profil utilisateur ou visiteur.
  */
 public class ProfilePage extends VBox {
 
@@ -24,6 +44,9 @@ public class ProfilePage extends VBox {
     private final StatistiquesService statistiquesService;
     private final AvisService avisService;
     private final CatalogueService catalogueService;
+    private final boolean modeVisiteur;
+    private final int ecoutesRestantes;
+    private final int ecoutesMax;
 
     public ProfilePage(Utilisateur utilisateur,
                        UtilisateurService utilisateurService,
@@ -35,12 +58,15 @@ public class ProfilePage extends VBox {
         this.statistiquesService = statistiquesService;
         this.avisService = avisService;
         this.catalogueService = catalogueService;
+        this.modeVisiteur = false;
+        this.ecoutesRestantes = 0;
+        this.ecoutesMax = 0;
 
         setSpacing(24);
         setPadding(new Insets(24));
         setStyle("-fx-background-color: #121212;");
 
-        getChildren().add(creerSectionProfil());
+        getChildren().add(creerSectionProfilAbonne());
         getChildren().add(creerSectionHistorique());
 
         if (utilisateur.estAdmin()) {
@@ -48,22 +74,69 @@ public class ProfilePage extends VBox {
         }
     }
 
-    // ========== Profil ==========
+    public ProfilePage(int ecoutesRestantes, int ecoutesMax) {
+        this.utilisateur = null;
+        this.utilisateurService = null;
+        this.statistiquesService = null;
+        this.avisService = null;
+        this.catalogueService = null;
+        this.modeVisiteur = true;
+        this.ecoutesRestantes = ecoutesRestantes;
+        this.ecoutesMax = ecoutesMax;
 
-    private VBox creerSectionProfil() {
+        setSpacing(24);
+        setPadding(new Insets(24));
+        setStyle("-fx-background-color: #121212;");
+
+        getChildren().add(creerSectionProfilVisiteur());
+    }
+
+    private VBox creerSectionProfilVisiteur() {
+        VBox section = new VBox(18);
+
+        HBox headerRow = new HBox(20);
+        headerRow.setAlignment(Pos.CENTER_LEFT);
+
+        StackPane avatar = creerAvatar("V", "#535353");
+
+        VBox info = new VBox(4);
+        Label nom = new Label("Visiteur");
+        nom.getStyleClass().add("page-title");
+
+        Label details = new Label("Mode invite");
+        details.getStyleClass().add("text-secondary");
+        info.getChildren().addAll(nom, details);
+
+        headerRow.getChildren().addAll(avatar, info);
+
+        VBox ecoutesBox = new VBox(8);
+        Label titre = new Label("Ecoutes disponibles");
+        titre.getStyleClass().add("text-primary");
+        titre.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
+
+        Label compteur = new Label(ecoutesRestantes + " / " + ecoutesMax);
+        compteur.getStyleClass().add("text-secondary");
+
+        double progression = ecoutesMax <= 0 ? 0 : (double) ecoutesRestantes / ecoutesMax;
+        ProgressBar bar = new ProgressBar(Math.max(0, Math.min(1, progression)));
+        bar.setPrefWidth(340);
+        bar.setStyle("-fx-accent: #1DB954;");
+
+        Label aide = new Label("Creez un compte pour debloquer l'ecoute sans limite et les playlists.");
+        aide.getStyleClass().add("text-secondary");
+
+        ecoutesBox.getChildren().addAll(titre, compteur, bar, aide);
+        section.getChildren().addAll(headerRow, ecoutesBox);
+        return section;
+    }
+
+    private VBox creerSectionProfilAbonne() {
         VBox section = new VBox(16);
 
         HBox headerRow = new HBox(20);
         headerRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Avatar
-        StackPane avatar = new StackPane();
-        Circle cercle = new Circle(40);
-        cercle.setFill(Color.web("#1DB954"));
-        Label initiale = new Label(utilisateur.getNom().substring(0, 1).toUpperCase());
-        initiale.setTextFill(Color.WHITE);
-        initiale.setFont(Font.font("Segoe UI", javafx.scene.text.FontWeight.BOLD, 28));
-        avatar.getChildren().addAll(cercle, initiale);
+        StackPane avatar = creerAvatar(utilisateur.getNom().substring(0, 1).toUpperCase(), "#1DB954");
 
         VBox infoUser = new VBox(4);
         Label nom = new Label(utilisateur.getNom());
@@ -76,7 +149,6 @@ public class ProfilePage extends VBox {
         infoUser.getChildren().addAll(nom, details);
         headerRow.getChildren().addAll(avatar, infoUser);
 
-        // Edit fields
         HBox editRow = new HBox(12);
         editRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -101,7 +173,9 @@ public class ProfilePage extends VBox {
             boolean okNom = !newNom.isEmpty() && !newNom.equals(utilisateur.getNom());
             boolean okEmail = !newEmail.isEmpty() && !newEmail.equals(utilisateur.getEmail());
 
-            if (okNom) utilisateurService.modifierProfil(utilisateur.getId(), newNom, null);
+            if (okNom) {
+                utilisateurService.modifierProfil(utilisateur.getId(), newNom, null);
+            }
             if (okEmail) {
                 boolean res = utilisateurService.modifierProfil(utilisateur.getId(), null, newEmail);
                 if (!res) {
@@ -119,7 +193,6 @@ public class ProfilePage extends VBox {
 
         editRow.getChildren().addAll(nomField, emailField, btnSauver, lblResultat);
 
-        // Password change
         HBox mdpRow = new HBox(12);
         mdpRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -156,8 +229,6 @@ public class ProfilePage extends VBox {
         return section;
     }
 
-    // ========== Historique ==========
-
     private VBox creerSectionHistorique() {
         VBox section = new VBox(8);
 
@@ -183,8 +254,6 @@ public class ProfilePage extends VBox {
         return section;
     }
 
-    // ========== Admin ==========
-
     private VBox creerSectionAdmin() {
         VBox section = new VBox(16);
 
@@ -192,13 +261,11 @@ public class ProfilePage extends VBox {
         titre.getStyleClass().add("section-title");
         titre.setStyle("-fx-text-fill: #F0A500; -fx-font-size: 22px;");
 
-        // Stats
         VBox stats = creerStats();
-
-        // User management
+        VBox gestionDemo = creerGestionMorceauxDemo();
         VBox gestionUsers = creerGestionUtilisateurs();
 
-        section.getChildren().addAll(titre, stats, gestionUsers);
+        section.getChildren().addAll(titre, stats, gestionDemo, gestionUsers);
         return section;
     }
 
@@ -218,7 +285,6 @@ public class ProfilePage extends VBox {
         ajouterStat(grid, 3, "Morceaux", statistiquesService.getNombreMorceaux());
         ajouterStat(grid, 4, "Ecoutes totales", statistiquesService.getNombreTotalEcoutes());
 
-        // Top morceaux
         VBox topBox = new VBox(4);
         Label lblTop = new Label("Top 5 morceaux");
         lblTop.getStyleClass().add("text-primary");
@@ -229,14 +295,188 @@ public class ProfilePage extends VBox {
         int rang = 1;
         for (Morceau m : top) {
             String artiste = m.getArtistes().isEmpty() ? "?" : m.getArtistes().get(0).getNom();
-            Label l = new Label(rang++ + ". " + m.getTitre() + " - " + artiste
+            Label ligne = new Label(rang++ + ". " + m.getTitre() + " - " + artiste
                     + " (" + m.getNombreEcoute() + " ecoutes)");
-            l.getStyleClass().add("text-secondary");
-            topBox.getChildren().add(l);
+            ligne.getStyleClass().add("text-secondary");
+            topBox.getChildren().add(ligne);
         }
 
-        box.getChildren().addAll(titre, grid, topBox);
+        VBox likesBox = new VBox(4);
+        Label lblLikes = new Label("Top 5 morceaux likes");
+        lblLikes.getStyleClass().add("text-primary");
+        lblLikes.setStyle("-fx-font-weight: bold;");
+        likesBox.getChildren().add(lblLikes);
+
+        List<Morceau> topLikes = statistiquesService.getMorceauxLesPlusAimes(5);
+        if (topLikes.isEmpty()) {
+            Label vide = new Label("Aucun avis enregistre.");
+            vide.getStyleClass().add("text-secondary");
+            likesBox.getChildren().add(vide);
+        } else {
+            int rangLikes = 1;
+            for (Morceau m : topLikes) {
+                String artiste = m.getArtistes().isEmpty() ? "?" : m.getArtistes().get(0).getNom();
+                int likes = avisService.getNombreLikes(m.getId());
+                Label ligne = new Label(rangLikes++ + ". " + m.getTitre() + " - " + artiste
+                        + " (" + likes + " likes)");
+                ligne.getStyleClass().add("text-secondary");
+                likesBox.getChildren().add(ligne);
+            }
+        }
+
+        box.getChildren().addAll(titre, grid, topBox, likesBox);
         return box;
+    }
+
+    private VBox creerGestionMorceauxDemo() {
+        VBox box = new VBox(10);
+        Label titre = new Label("Gestion des morceaux Demo");
+        titre.getStyleClass().add("text-primary");
+        titre.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
+
+        Button btnAjouter = new Button("+ Creer un morceau");
+        btnAjouter.getStyleClass().add("btn-primary");
+        btnAjouter.setStyle("-fx-padding: 8 16 8 16;");
+
+        VBox listeBox = new VBox(6);
+
+        Runnable[] refreshRef = new Runnable[1];
+        refreshRef[0] = () -> {
+            listeBox.getChildren().clear();
+            List<Morceau> morceaux = catalogueService.getMorceauxDemo();
+            if (morceaux.isEmpty()) {
+                Label vide = new Label("Aucun morceau Demo disponible.");
+                vide.getStyleClass().add("text-secondary");
+                listeBox.getChildren().add(vide);
+                return;
+            }
+
+            for (Morceau morceau : morceaux) {
+                HBox row = new HBox(10);
+                row.setAlignment(Pos.CENTER_LEFT);
+                row.setPadding(new Insets(6, 8, 6, 8));
+                row.setStyle("-fx-background-color: rgba(255,255,255,0.03); -fx-background-radius: 4;");
+
+                String artiste = morceau.getArtistes().isEmpty() ? "?" : morceau.getArtistes().get(0).getNom();
+                Label info = new Label(morceau.getId() + ". " + morceau.getTitre()
+                        + " - " + artiste + " (" + morceau.getDureeFormatee()
+                        + ", " + morceau.getGenre() + ")");
+                info.getStyleClass().add("text-primary");
+                HBox.setHgrow(info, Priority.ALWAYS);
+
+                Button btnConsulter = new Button("Consulter");
+                btnConsulter.getStyleClass().add("btn-secondary");
+                btnConsulter.setOnAction(e -> afficherDetailMorceauDemo(morceau));
+
+                Button btnSupprimer = new Button("Supprimer");
+                btnSupprimer.getStyleClass().add("btn-secondary");
+                btnSupprimer.setStyle("-fx-text-fill: #F15E6C; -fx-border-color: #F15E6C;");
+                btnSupprimer.setOnAction(e -> {
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Supprimer le morceau");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Supprimer \"" + morceau.getTitre() + "\" ?");
+                    alert.showAndWait().ifPresent(result -> {
+                        if (result == ButtonType.OK) {
+                            catalogueService.supprimerMorceau(morceau.getId());
+                            refreshRef[0].run();
+                        }
+                    });
+                });
+
+                row.getChildren().addAll(info, btnConsulter, btnSupprimer);
+                listeBox.getChildren().add(row);
+            }
+        };
+
+        btnAjouter.setOnAction(e -> {
+            dialogCreerMorceauDemo();
+            refreshRef[0].run();
+        });
+
+        refreshRef[0].run();
+        box.getChildren().addAll(titre, btnAjouter, listeBox);
+        return box;
+    }
+
+    private void dialogCreerMorceauDemo() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Creer un morceau Demo");
+        dialog.setHeaderText(null);
+
+        DialogPane pane = dialog.getDialogPane();
+        pane.setStyle("-fx-background-color: #282828;");
+        pane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextField titreField = new TextField();
+        titreField.setPromptText("Titre");
+
+        TextField dureeField = new TextField();
+        dureeField.setPromptText("Duree en secondes");
+
+        ComboBox<Artiste> artisteBox = new ComboBox<>();
+        artisteBox.getItems().setAll(catalogueService.getTousArtistes());
+        artisteBox.setPromptText("Artiste");
+
+        ComboBox<Genre> genreBox = new ComboBox<>();
+        genreBox.getItems().setAll(Genre.values());
+        genreBox.setValue(Genre.AUTRE);
+
+        VBox content = new VBox(10,
+                new Label("Titre"), titreField,
+                new Label("Artiste"), artisteBox,
+                new Label("Duree"), dureeField,
+                new Label("Categorie"), genreBox);
+        content.setPadding(new Insets(16));
+        pane.setContent(content);
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result != ButtonType.OK) {
+                return;
+            }
+
+            String titre = titreField.getText().trim();
+            String dureeTexte = dureeField.getText().trim();
+            Artiste artiste = artisteBox.getValue();
+            Genre genre = genreBox.getValue() == null ? Genre.AUTRE : genreBox.getValue();
+
+            if (titre.isEmpty() || dureeTexte.isEmpty() || artiste == null) {
+                Alert erreur = new Alert(Alert.AlertType.ERROR, "Titre, artiste et duree sont obligatoires.");
+                erreur.showAndWait();
+                return;
+            }
+
+            int duree;
+            try {
+                duree = Integer.parseInt(dureeTexte);
+            } catch (NumberFormatException ex) {
+                Alert erreur = new Alert(Alert.AlertType.ERROR, "La duree doit etre un nombre entier.");
+                erreur.showAndWait();
+                return;
+            }
+
+            if (duree <= 0) {
+                Alert erreur = new Alert(Alert.AlertType.ERROR, "La duree doit etre positive.");
+                erreur.showAndWait();
+                return;
+            }
+
+            catalogueService.creerMorceau(titre, duree, artiste, null, genre);
+            Alert ok = new Alert(Alert.AlertType.INFORMATION, "Morceau Demo cree.");
+            ok.showAndWait();
+        });
+    }
+
+    private void afficherDetailMorceauDemo(Morceau morceau) {
+        String artiste = morceau.getArtistes().isEmpty() ? "?" : morceau.getArtistes().get(0).getNom();
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Detail du morceau");
+        alert.setHeaderText(morceau.getTitre());
+        alert.setContentText("Artiste : " + artiste
+                + "\nDuree : " + morceau.getDureeFormatee()
+                + "\nCategorie : " + morceau.getGenre()
+                + "\nAjout : " + morceau.getDateAjout());
+        alert.showAndWait();
     }
 
     private void ajouterStat(GridPane grid, int row, String label, int valeur) {
@@ -299,8 +539,18 @@ public class ProfilePage extends VBox {
         };
 
         refresh.run();
-
         box.getChildren().addAll(titre, listeBox);
         return box;
+    }
+
+    private StackPane creerAvatar(String texte, String couleurFond) {
+        StackPane avatar = new StackPane();
+        Circle cercle = new Circle(40);
+        cercle.setFill(Color.web(couleurFond));
+        Label initiale = new Label(texte);
+        initiale.setTextFill(Color.WHITE);
+        initiale.setFont(Font.font("Segoe UI", FontWeight.BOLD, 28));
+        avatar.getChildren().addAll(cercle, initiale);
+        return avatar;
     }
 }
